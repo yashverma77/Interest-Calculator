@@ -696,8 +696,8 @@
      <div class="error-message" id="errorMessage"></div>
      <form id="calculatorForm">
       <div class="form-group"><label for="principal" class="form-label">Principal Amount</label>
-       <input type="number" inputmode="decimal" min="0" id="principal" class="form-input" placeholder="Enter amount (e.g., 100000)" required>
-
+       <div class="principal-input"><span class="currency-symbol">₹</span> <input type="number" id="principal" class="form-input" placeholder="Enter amount (e.g., 1,00,000)" required>
+       </div>
       </div>
       <div class="form-group"><label class="form-label">Interest Rate Type</label>
        <div class="radio-group"><label class="radio-option"> <input type="radio" name="rateType" value="annual"> <span class="radio-custom"></span> Annual Rate (%) </label> <label class="radio-option"> <input type="radio" name="rateType" value="monthly" checked> <span class="radio-custom"></span> Monthly Rate (%) </label>
@@ -1508,4 +1508,3 @@
     </script>
  <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'993ae84ca59c5959',t:'MTc2MTMyMzk0MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
-
