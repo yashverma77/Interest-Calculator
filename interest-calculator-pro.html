@@ -1,0 +1,1673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Interest Calculator Pro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Noto+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #222535;
+      --surface3: #2a2e42;
+      --border: #2e3350;
+      --border2: #3d4268;
+      --accent: #f5a623;
+      --accent2: #ff6b35;
+      --accent3: #4ade80;
+      --accent4: #38bdf8;
+      --text: #f0f2ff;
+      --text2: #a8adc8;
+      --text3: #6b7196;
+      --si-color: #4ade80;
+      --ci-color: #f59e0b;
+      --danger: #ef4444;
+      --shadow: 0 8px 32px rgba(0,0,0,0.5);
+      --radius: 16px;
+      --radius-sm: 10px;
+    }
+
+    [data-theme="light"] {
+      --bg: #eef0f8;
+      --surface: #ffffff;
+      --surface2: #f3f4fc;
+      --surface3: #e8eaf5;
+      --border: #d0d3f0;
+      --border2: #b8bcde;
+      --text: #1a1d2e;
+      --text2: #4a4f72;
+      --text3: #8085aa;
+      --shadow: 0 8px 32px rgba(0,0,0,0.12);
+    }
+
+    html { font-size: 16px; }
+
+    body {
+      font-family: 'Noto Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    /* ─── TOP BAR ─── */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      background: var(--surface);
+      border-bottom: 2px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .topbar-title {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .topbar-title span { color: var(--text); }
+
+    .topbar-right { display: flex; align-items: center; gap: 10px; }
+
+    .theme-btn {
+      background: var(--surface2);
+      border: 2px solid var(--border);
+      color: var(--text);
+      border-radius: 50px;
+      padding: 8px 16px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .theme-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ─── LAYOUT ─── */
+    .app {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: auto;
+      gap: 16px;
+      padding: 18px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    @media (max-width: 800px) {
+      .app { grid-template-columns: 1fr; }
+    }
+
+    /* ─── CARD ─── */
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1.5px solid var(--border);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 18px 22px 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card-icon {
+      font-size: 1.4rem;
+      width: 38px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      background: var(--surface2);
+    }
+
+    .card-title {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      color: var(--text);
+    }
+
+    .card-body { padding: 20px 22px; }
+
+    /* ─── MODE TOGGLE ─── */
+    .mode-toggle {
+      display: flex;
+      background: var(--surface2);
+      border-radius: var(--radius-sm);
+      padding: 4px;
+      margin-bottom: 20px;
+      border: 1.5px solid var(--border);
+    }
+
+    .mode-btn {
+      flex: 1;
+      padding: 12px 10px;
+      border: none;
+      border-radius: 7px;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      transition: all 0.25s;
+      background: transparent;
+      color: var(--text3);
+    }
+
+    .mode-btn.active {
+      background: var(--surface3);
+      color: var(--text);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }
+
+    #siBtn.active { color: var(--si-color); border: 1px solid var(--si-color); }
+    #ciBtn.active { color: var(--ci-color); border: 1px solid var(--ci-color); }
+
+    /* ─── FORM FIELDS ─── */
+    .field { margin-bottom: 18px; }
+
+    .field-label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text2);
+      margin-bottom: 8px;
+    }
+
+    /* ─── AMOUNT INPUT BOX ─── */
+    .amount-box {
+      display: flex;
+      align-items: center;
+      background: var(--surface2);
+      border: 2px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 0 16px;
+      cursor: pointer;
+      transition: border-color 0.2s;
+      min-height: 58px;
+      user-select: none;
+      position: relative;
+    }
+
+    .amount-box:hover { border-color: var(--accent); }
+    .amount-box.active { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(245,166,35,0.15); }
+
+    .amount-symbol {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin-right: 8px;
+    }
+
+    .amount-display {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--text);
+      flex: 1;
+      letter-spacing: 0.02em;
+    }
+
+    .amount-display.placeholder { color: var(--text3); font-size: 1.1rem; font-family: 'Noto Sans', sans-serif; font-weight: 500; }
+
+    .amount-cursor {
+      display: inline-block;
+      width: 2px;
+      height: 1.6rem;
+      background: var(--accent);
+      margin-left: 2px;
+      vertical-align: middle;
+      animation: blink 1s step-end infinite;
+    }
+
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+    .keypad-icon {
+      font-size: 1.2rem;
+      color: var(--text3);
+      transition: color 0.2s;
+    }
+    .amount-box:hover .keypad-icon,
+    .amount-box.active .keypad-icon { color: var(--accent); }
+
+    /* ─── RATE ROW ─── */
+    .rate-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    /* ─── INPUT FIELD ─── */
+    .inp {
+      width: 100%;
+      background: var(--surface2);
+      border: 2px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      font-family: 'Noto Sans', sans-serif;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text);
+      transition: border-color 0.2s;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+
+    .inp:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(245,166,35,0.15); }
+
+    select.inp { cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23a8adc8' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
+
+    /* ─── PERIOD TOGGLE (DATE / MONTHS) ─── */
+    .period-toggle {
+      display: flex;
+      background: var(--surface2);
+      border-radius: var(--radius-sm);
+      padding: 3px;
+      border: 1.5px solid var(--border);
+      margin-bottom: 14px;
+    }
+
+    .period-btn {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 7px;
+      font-family: 'Noto Sans', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      transition: all 0.25s;
+      background: transparent;
+      color: var(--text3);
+    }
+
+    .period-btn.active {
+      background: var(--accent4);
+      color: #000;
+    }
+
+    /* ─── DATE SECTION ─── */
+    .date-section { display: block; }
+    .date-section.hidden { display: none; }
+
+    .date-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    /* ─── MONTH SECTION ─── */
+    .month-section { display: none; }
+    .month-section.shown { display: block; }
+
+    .month-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .month-chip {
+      padding: 10px 4px;
+      border: 2px solid var(--border2);
+      border-radius: var(--radius-sm);
+      background: var(--surface2);
+      color: var(--text2);
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.18s;
+      user-select: none;
+    }
+
+    .month-chip:hover { border-color: var(--accent4); color: var(--text); }
+    .month-chip.selected { background: var(--accent4); border-color: var(--accent4); color: #000; }
+
+    .custom-month-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--surface2);
+      border: 2px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+    }
+
+    .custom-month-row input {
+      background: transparent;
+      border: none;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--text);
+      width: 80px;
+      text-align: right;
+    }
+
+    .custom-month-row input:focus { outline: none; }
+    .custom-month-label { font-size: 0.9rem; font-weight: 600; color: var(--text2); }
+
+    /* ─── DURATION BADGE ─── */
+    .duration-badge {
+      display: none;
+      background: var(--surface3);
+      border: 1px solid var(--border2);
+      border-radius: 50px;
+      padding: 6px 14px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--accent4);
+      text-align: center;
+      margin-top: 10px;
+      letter-spacing: 0.02em;
+    }
+
+    .duration-badge.shown { display: block; }
+
+    /* ─── RATE TYPE PILLS ─── */
+    .pill-group {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .pill-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 16px;
+      border: 2px solid var(--border2);
+      border-radius: 50px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: var(--text2);
+      transition: all 0.2s;
+      user-select: none;
+    }
+
+    .pill-label input { display: none; }
+
+    .pill-label:has(input:checked),
+    .pill-label.checked {
+      border-color: var(--accent4);
+      background: rgba(56,189,248,0.12);
+      color: var(--accent4);
+    }
+
+    /* ─── FREQUENCY GROUP ─── */
+    .freq-group { display: none; margin-bottom: 18px; }
+    .freq-group.show { display: block; }
+
+    /* ─── BUTTONS ─── */
+    .btn-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 6px;
+    }
+
+    .btn {
+      padding: 16px 10px;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .btn-calc {
+      background: linear-gradient(135deg, #f5a623, #ff6b35);
+      color: #000;
+      box-shadow: 0 4px 20px rgba(245,166,35,0.3);
+    }
+
+    .btn-calc:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(245,166,35,0.4); }
+    .btn-calc:active { transform: translateY(0); }
+
+    .btn-clear {
+      background: var(--surface2);
+      border: 2px solid var(--border2);
+      color: var(--text2);
+    }
+
+    .btn-clear:hover { border-color: var(--danger); color: var(--danger); }
+
+    .btn-pdf {
+      width: 100%;
+      background: linear-gradient(135deg, #4ade80, #22c55e);
+      color: #000;
+      box-shadow: 0 4px 20px rgba(74,222,128,0.25);
+      margin-top: 16px;
+    }
+
+    .btn-pdf:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(74,222,128,0.35); }
+
+    /* ─── MESSAGES ─── */
+    .msg {
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      display: none;
+      margin-bottom: 12px;
+    }
+
+    .msg-error { background: rgba(239,68,68,0.15); border: 1px solid #ef4444; color: #ef4444; }
+    .msg-success { background: rgba(74,222,128,0.15); border: 1px solid #4ade80; color: #4ade80; }
+
+    /* ─── RESULTS ─── */
+    .results-card { grid-column: span 1; }
+
+    .results-empty {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text3);
+      font-size: 0.95rem;
+    }
+
+    .results-empty .big-icon { font-size: 3rem; margin-bottom: 12px; opacity: 0.4; }
+
+    .result-blocks { display: none; flex-direction: column; gap: 12px; }
+    .result-blocks.show { display: flex; }
+
+    .result-block {
+      background: var(--surface2);
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--border2);
+      padding: 18px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .result-block.highlight {
+      background: linear-gradient(135deg, rgba(245,166,35,0.12), rgba(255,107,53,0.08));
+      border-color: var(--accent);
+    }
+
+    .rb-label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text3);
+      margin-bottom: 4px;
+    }
+
+    .rb-value {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1.9rem;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: 0.01em;
+    }
+
+    .result-block.highlight .rb-value { color: var(--accent); }
+
+    .rb-icon {
+      font-size: 2rem;
+      opacity: 0.5;
+    }
+
+    .result-meta {
+      background: var(--surface2);
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--border);
+      padding: 14px 20px;
+      font-size: 0.85rem;
+      color: var(--text2);
+      line-height: 1.9;
+    }
+
+    .result-meta strong { color: var(--text); }
+
+    /* ─── HISTORY ─── */
+    .history-card { grid-column: 1 / -1; }
+
+    .history-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex: 1;
+    }
+
+    .btn-sm {
+      padding: 7px 14px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-family: 'Noto Sans', sans-serif;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      cursor: pointer;
+      border: 2px solid var(--border2);
+      background: var(--surface2);
+      color: var(--text2);
+      transition: all 0.2s;
+    }
+
+    .btn-sm:hover { border-color: var(--danger); color: var(--danger); }
+
+    .history-list { display: flex; flex-direction: column; gap: 10px; }
+
+    .history-item {
+      background: var(--surface2);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px 18px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .history-item:hover { border-color: var(--accent4); transform: translateX(4px); }
+
+    .hi-badge {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 50px;
+      white-space: nowrap;
+    }
+
+    .si-badge { background: rgba(74,222,128,0.15); color: var(--si-color); border: 1px solid var(--si-color); }
+    .ci-badge { background: rgba(245,158,11,0.15); color: var(--ci-color); border: 1px solid var(--ci-color); }
+
+    .hi-details { font-size: 0.85rem; color: var(--text2); line-height: 1.5; }
+    .hi-details strong { color: var(--text); }
+
+    .hi-total {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--accent4);
+      white-space: nowrap;
+    }
+
+    .history-empty {
+      text-align: center;
+      padding: 30px;
+      color: var(--text3);
+      font-size: 0.9rem;
+    }
+
+    /* ─── SPINNER ─── */
+    .spinner-wrap { display: none; text-align: center; padding: 16px; }
+    .spinner {
+      width: 32px; height: 32px;
+      border: 3px solid var(--border2);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 8px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ─── NUMBER KEYPAD OVERLAY ─── */
+    .keypad-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 500;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      backdrop-filter: blur(4px);
+    }
+
+    .keypad-overlay.open { display: flex; }
+
+    .keypad-panel {
+      background: var(--surface);
+      border-radius: 24px 24px 0 0;
+      border: 2px solid var(--border);
+      border-bottom: none;
+      width: 100%;
+      max-width: 480px;
+      padding: 20px 20px 32px;
+      animation: slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(100%); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .keypad-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .keypad-header-title {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text2);
+      letter-spacing: 0.06em;
+    }
+
+    .keypad-close {
+      background: var(--surface2);
+      border: none;
+      border-radius: 50%;
+      width: 34px;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--text2);
+      font-size: 1.1rem;
+      transition: all 0.2s;
+    }
+
+    .keypad-close:hover { background: var(--danger); color: #fff; }
+
+    .keypad-display {
+      background: var(--surface2);
+      border: 2px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 14px 18px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .kp-symbol {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .kp-amount {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: var(--text);
+      flex: 1;
+      letter-spacing: 0.01em;
+    }
+
+    .kp-cursor {
+      display: inline-block;
+      width: 2px;
+      height: 2rem;
+      background: var(--accent);
+      animation: blink 1s step-end infinite;
+      vertical-align: middle;
+    }
+
+    .keypad-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .kp-btn {
+      height: 66px;
+      border: 2px solid var(--border2);
+      border-radius: var(--radius-sm);
+      background: var(--surface2);
+      color: var(--text);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.12s;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .kp-btn:active { transform: scale(0.94); background: var(--surface3); }
+    .kp-btn.kp-zero { grid-column: span 2; }
+
+    .kp-btn.kp-dot { font-size: 1.2rem; }
+
+    .kp-btn.kp-del {
+      background: rgba(239,68,68,0.12);
+      border-color: rgba(239,68,68,0.3);
+      color: var(--danger);
+      font-size: 1.1rem;
+    }
+
+    .kp-btn.kp-done {
+      grid-column: span 3;
+      height: 56px;
+      background: linear-gradient(135deg, #f5a623, #ff6b35);
+      border-color: transparent;
+      color: #000;
+      font-size: 1.2rem;
+      letter-spacing: 0.08em;
+      margin-top: 4px;
+    }
+
+    .kp-btn.kp-done:active { transform: scale(0.97); }
+
+    /* ─── MODAL DIALOG ─── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 600;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(4px);
+    }
+
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1.5px solid var(--border);
+      padding: 28px;
+      max-width: 360px;
+      width: 90%;
+      box-shadow: var(--shadow);
+    }
+
+    .modal h3 { font-size: 1.15rem; font-weight: 700; margin-bottom: 12px; }
+    .modal p { font-size: 0.92rem; color: var(--text2); line-height: 1.6; margin-bottom: 22px; }
+
+    .modal-btns { display: flex; gap: 10px; justify-content: flex-end; }
+
+    .modal-btn {
+      padding: 11px 22px;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 0.9rem;
+      border: 2px solid var(--border2);
+      background: var(--surface2);
+      color: var(--text2);
+      transition: all 0.2s;
+    }
+
+    .modal-btn.danger { background: #ef4444; border-color: #ef4444; color: #fff; }
+    .modal-btn.danger:hover { background: #dc2626; }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 600px) {
+      .app { padding: 12px; gap: 12px; }
+      .card-body { padding: 16px; }
+      .rate-row { grid-template-columns: 1fr; }
+      .date-row { grid-template-columns: 1fr; }
+      .month-grid { grid-template-columns: repeat(3, 1fr); }
+      .topbar-title { font-size: 1.2rem; }
+      .rb-value { font-size: 1.5rem; }
+    }
+  </style>
+</head>
+<body data-theme="dark">
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-title">⚡ <span>INTEREST</span> PRO</div>
+  <div class="topbar-right">
+    <button class="theme-btn" onclick="toggleTheme()">
+      <span id="theme-icon">☀️</span>
+      <span id="theme-text">Light</span>
+    </button>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div class="app">
+
+  <!-- ─── INPUT CARD ─── -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon">🧮</div>
+      <div class="card-title">CALCULATOR INPUT</div>
+    </div>
+    <div class="card-body">
+
+      <!-- Mode -->
+      <div class="mode-toggle">
+        <button class="mode-btn active" id="siBtn" onclick="switchMode('SI')">📐 Simple Interest</button>
+        <button class="mode-btn" id="ciBtn" onclick="switchMode('CI')">🔄 Compound Interest</button>
+      </div>
+
+      <!-- Messages -->
+      <div class="msg msg-error" id="errorMsg"></div>
+
+      <!-- AMOUNT -->
+      <div class="field">
+        <label class="field-label">Principal Amount</label>
+        <div class="amount-box" id="amountBox" onclick="openKeypad()">
+          <span class="amount-symbol">₹</span>
+          <span class="amount-display placeholder" id="amountDisplay">Tap to enter amount</span>
+          <span class="keypad-icon">⌨️</span>
+        </div>
+        <input type="hidden" id="principalHidden">
+      </div>
+
+      <!-- RATE TYPE -->
+      <div class="field">
+        <label class="field-label">Interest Rate Type</label>
+        <div class="pill-group">
+          <label class="pill-label" id="pill-monthly">
+            <input type="radio" name="rateType" value="monthly" checked onchange="handleRateType(this)">
+            🌙 Monthly (%)
+          </label>
+          <label class="pill-label" id="pill-annual">
+            <input type="radio" name="rateType" value="annual" onchange="handleRateType(this)">
+            📅 Annual (%)
+          </label>
+        </div>
+      </div>
+
+      <!-- RATE VALUE -->
+      <div class="field">
+        <label class="field-label" id="rateLabel">Monthly Interest Rate (%)</label>
+        <input type="number" class="inp" id="rate" placeholder="e.g. 0.7" min="0.001" step="0.001">
+      </div>
+
+      <!-- PERIOD MODE SELECT -->
+      <div class="field">
+        <label class="field-label">Investment Period — Select Mode</label>
+        <div class="period-toggle">
+          <button class="period-btn active" id="btnDateMode" onclick="switchPeriodMode('date')">📆 By Date</button>
+          <button class="period-btn" id="btnMonthMode" onclick="switchPeriodMode('month')">🗓️ By Months</button>
+        </div>
+
+        <!-- DATE MODE -->
+        <div class="date-section" id="dateSection">
+          <div class="date-row">
+            <div>
+              <label class="field-label">Start Date</label>
+              <input type="date" class="inp" id="startDate" onchange="calculateDuration()">
+            </div>
+            <div>
+              <label class="field-label">End Date</label>
+              <input type="date" class="inp" id="endDate" onchange="calculateDuration()">
+            </div>
+          </div>
+        </div>
+
+        <!-- MONTH MODE -->
+        <div class="month-section" id="monthSection">
+          <label class="field-label" style="margin-bottom:10px;">Quick Select</label>
+          <div class="month-grid" id="monthGrid">
+            <div class="month-chip" onclick="selectMonthChip(this, 1)">1 Mo</div>
+            <div class="month-chip" onclick="selectMonthChip(this, 3)">3 Mo</div>
+            <div class="month-chip" onclick="selectMonthChip(this, 6)">6 Mo</div>
+            <div class="month-chip" onclick="selectMonthChip(this, 9)">9 Mo</div>
+            <div class="month-chip" onclick="selectMonthChip(this, 12)">1 Yr</div>
+            <div class="month-chip" onclick="selectMonthChip(this, 18)">18 Mo</div>
+            <div class="month-chip" onclick="selectMonthChip(this, 24)">2 Yr</div>
+            <div class="month-chip" onclick="selectMonthChip(this, 36)">3 Yr</div>
+            <div class="month-chip" onclick="selectMonthChip(this, 48)">4 Yr</div>
+            <div class="month-chip" onclick="selectMonthChip(this, 60)">5 Yr</div>
+            <div class="month-chip" onclick="selectMonthChip(this, 84)">7 Yr</div>
+            <div class="month-chip" onclick="selectMonthChip(this, 120)">10 Yr</div>
+          </div>
+          <div class="custom-month-row">
+            <span class="custom-month-label">Custom:</span>
+            <input type="number" id="customMonths" placeholder="0" min="1" max="600" oninput="onCustomMonthInput()">
+            <span class="custom-month-label">months</span>
+          </div>
+        </div>
+
+        <!-- DURATION BADGE -->
+        <div class="duration-badge" id="durationBadge">—</div>
+      </div>
+
+      <!-- COMPOUNDING FREQUENCY -->
+      <div class="freq-group" id="freqGroup">
+        <label class="field-label">Compounding Frequency</label>
+        <select class="inp" id="frequency">
+          <option value="1">Annually (1× per year)</option>
+          <option value="2">Semi-Annually (2× per year)</option>
+          <option value="4">Quarterly (4× per year)</option>
+          <option value="12" selected>Monthly (12× per year)</option>
+          <option value="365">Daily (365× per year)</option>
+        </select>
+      </div>
+
+      <!-- BUTTONS -->
+      <div class="btn-row">
+        <button class="btn btn-calc" id="calcBtn" onclick="handleCalculation()">📊 CALCULATE</button>
+        <button class="btn btn-clear" onclick="confirmClearAll()">🗑️ CLEAR ALL</button>
+      </div>
+
+      <!-- SPINNER -->
+      <div class="spinner-wrap" id="spinner">
+        <div class="spinner"></div>
+        <p style="font-size:0.85rem;color:var(--text3)">Calculating…</p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ─── RESULTS CARD ─── -->
+  <div class="card results-card">
+    <div class="card-header">
+      <div class="card-icon">📈</div>
+      <div class="card-title">CALCULATION RESULTS</div>
+    </div>
+    <div class="card-body">
+
+      <div class="results-empty" id="resultsEmpty">
+        <div class="big-icon">🏦</div>
+        <div>Results will appear here after calculation</div>
+      </div>
+
+      <div class="result-blocks" id="resultBlocks">
+        <div class="result-block">
+          <div>
+            <div class="rb-label">Principal Amount</div>
+            <div class="rb-value" id="resPrincipal">—</div>
+          </div>
+          <div class="rb-icon">💰</div>
+        </div>
+        <div class="result-block" style="border-color: var(--si-color); background: rgba(74,222,128,0.06)">
+          <div>
+            <div class="rb-label">Interest Earned</div>
+            <div class="rb-value" id="resInterest" style="color: var(--si-color)">—</div>
+          </div>
+          <div class="rb-icon">📈</div>
+        </div>
+        <div class="result-block highlight">
+          <div>
+            <div class="rb-label">Total Amount</div>
+            <div class="rb-value" id="resTotal">—</div>
+          </div>
+          <div class="rb-icon">🏆</div>
+        </div>
+        <div class="result-meta" id="resMeta"></div>
+        <button class="btn btn-pdf" onclick="downloadPDF()">📄 DOWNLOAD PDF REPORT</button>
+      </div>
+
+      <div class="msg msg-success" id="successMsg"></div>
+
+    </div>
+  </div>
+
+  <!-- ─── HISTORY CARD ─── -->
+  <div class="card history-card">
+    <div class="card-header">
+      <div class="card-icon">📚</div>
+      <div style="flex:1">
+        <div class="history-top">
+          <div class="card-title">CALCULATION HISTORY</div>
+          <button class="btn-sm" onclick="confirmClearHistory()">🗑 Clear History</button>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="history-list" id="historyList">
+        <div class="history-empty">No calculations yet. Start by calculating interest!</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+
+<!-- ─── NUMBER KEYPAD OVERLAY ─── -->
+<div class="keypad-overlay" id="keypadOverlay" onclick="handleOverlayClick(event)">
+  <div class="keypad-panel" id="keypadPanel">
+    <div class="keypad-header">
+      <div class="keypad-header-title">ENTER PRINCIPAL AMOUNT</div>
+      <button class="keypad-close" onclick="closeKeypad()">✕</button>
+    </div>
+    <div class="keypad-display">
+      <span class="kp-symbol">₹</span>
+      <span class="kp-amount" id="kpDisplay">0<span class="kp-cursor"></span></span>
+    </div>
+    <div class="keypad-grid">
+      <button class="kp-btn" onclick="kpPress('7')">7</button>
+      <button class="kp-btn" onclick="kpPress('8')">8</button>
+      <button class="kp-btn" onclick="kpPress('9')">9</button>
+      <button class="kp-btn" onclick="kpPress('4')">4</button>
+      <button class="kp-btn" onclick="kpPress('5')">5</button>
+      <button class="kp-btn" onclick="kpPress('6')">6</button>
+      <button class="kp-btn" onclick="kpPress('1')">1</button>
+      <button class="kp-btn" onclick="kpPress('2')">2</button>
+      <button class="kp-btn" onclick="kpPress('3')">3</button>
+      <button class="kp-btn kp-zero" onclick="kpPress('0')">0</button>
+      <button class="kp-btn kp-dot" onclick="kpPress('.')">•</button>
+      <button class="kp-btn kp-del" onclick="kpBackspace()">⌫</button>
+      <button class="kp-btn kp-done" onclick="confirmKeypad()">✓ DONE</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── CONFIRM MODAL ─── -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h3 id="modalTitle">Confirm</h3>
+    <p id="modalMsg">Are you sure?</p>
+    <div class="modal-btns">
+      <button class="modal-btn" onclick="closeModal()">Cancel</button>
+      <button class="modal-btn danger" id="modalConfirmBtn">Confirm</button>
+    </div>
+  </div>
+</div>
+
+
+<script>
+// ─── STATE ───────────────────────────────────────────────
+let currentMode = 'SI';
+let periodMode = 'date'; // 'date' | 'month'
+let kpRawValue = '';     // keypad raw string
+let lastCalc = null;
+let history = [];
+let modalCallback = null;
+
+// ─── INIT ─────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  loadTheme();
+  loadHistoryFromStorage();
+  setDefaultDates();
+  updatePillStyles();
+});
+
+// ─── THEME ────────────────────────────────────────────────
+function loadTheme() {
+  const saved = localStorage.getItem('calcTheme') || 'dark';
+  document.body.setAttribute('data-theme', saved);
+  updateThemeBtn(saved);
+}
+
+function toggleTheme() {
+  const current = document.body.getAttribute('data-theme');
+  const next = current === 'dark' ? 'light' : 'dark';
+  document.body.setAttribute('data-theme', next);
+  localStorage.setItem('calcTheme', next);
+  updateThemeBtn(next);
+}
+
+function updateThemeBtn(theme) {
+  document.getElementById('theme-icon').textContent = theme === 'dark' ? '☀️' : '🌙';
+  document.getElementById('theme-text').textContent = theme === 'dark' ? 'Light' : 'Dark';
+}
+
+// ─── MODE ─────────────────────────────────────────────────
+function switchMode(mode) {
+  currentMode = mode;
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(mode === 'SI' ? 'siBtn' : 'ciBtn').classList.add('active');
+  const fg = document.getElementById('freqGroup');
+  fg.classList.toggle('show', mode === 'CI');
+}
+
+// ─── PERIOD MODE ───────────────────────────────────────────
+function switchPeriodMode(mode) {
+  periodMode = mode;
+  document.getElementById('btnDateMode').classList.toggle('active', mode === 'date');
+  document.getElementById('btnMonthMode').classList.toggle('active', mode === 'month');
+  document.getElementById('dateSection').classList.toggle('hidden', mode !== 'date');
+  document.getElementById('monthSection').classList.toggle('shown', mode === 'month');
+  updateDurationBadge();
+}
+
+// ─── MONTH CHIPS ───────────────────────────────────────────
+let selectedMonths = 0;
+
+function selectMonthChip(el, months) {
+  document.querySelectorAll('.month-chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedMonths = months;
+  document.getElementById('customMonths').value = months;
+  updateDurationBadge();
+}
+
+function onCustomMonthInput() {
+  const val = parseInt(document.getElementById('customMonths').value) || 0;
+  selectedMonths = val;
+  document.querySelectorAll('.month-chip').forEach(c => c.classList.remove('selected'));
+  updateDurationBadge();
+}
+
+// ─── DATES & DURATION ──────────────────────────────────────
+function setDefaultDates() {
+  const today = new Date();
+  document.getElementById('endDate').value = today.toISOString().split('T')[0];
+}
+
+function calculateDuration() {
+  updateDurationBadge();
+}
+
+function updateDurationBadge() {
+  const badge = document.getElementById('durationBadge');
+
+  if (periodMode === 'date') {
+    const s = new Date(document.getElementById('startDate').value);
+    const e = new Date(document.getElementById('endDate').value);
+    if (s && e && e > s) {
+      const diffDays = Math.ceil((e - s) / 86400000);
+      const y = Math.floor(diffDays / 365);
+      const m = Math.floor((diffDays % 365) / 30);
+      const d = diffDays % 30;
+      let text = 'Duration: ';
+      if (y > 0) text += `${y} yr `;
+      if (m > 0) text += `${m} mo `;
+      if (d > 0) text += `${d} day${d > 1 ? 's' : ''}`;
+      badge.textContent = text.trim() + ` (${diffDays} days)`;
+      badge.classList.add('shown');
+    } else {
+      badge.classList.remove('shown');
+    }
+  } else {
+    const m = selectedMonths || parseInt(document.getElementById('customMonths').value) || 0;
+    if (m > 0) {
+      const y = Math.floor(m / 12);
+      const rem = m % 12;
+      let text = `Duration: `;
+      if (y > 0) text += `${y} year${y > 1 ? 's' : ''} `;
+      if (rem > 0) text += `${rem} month${rem > 1 ? 's' : ''}`;
+      badge.textContent = text.trim() + ` (${m} months)`;
+      badge.classList.add('shown');
+    } else {
+      badge.classList.remove('shown');
+    }
+  }
+}
+
+// ─── RATE TYPE ─────────────────────────────────────────────
+function handleRateType(el) {
+  updatePillStyles();
+  const isMonthly = el.value === 'monthly';
+  document.getElementById('rateLabel').textContent = isMonthly ? 'Monthly Interest Rate (%)' : 'Annual Interest Rate (%)';
+  document.getElementById('rate').placeholder = isMonthly ? 'e.g. 0.7' : 'e.g. 8.5';
+}
+
+function updatePillStyles() {
+  const monthly = document.querySelector('input[name="rateType"][value="monthly"]');
+  const annual = document.querySelector('input[name="rateType"][value="annual"]');
+  document.getElementById('pill-monthly').classList.toggle('checked', monthly.checked);
+  document.getElementById('pill-annual').classList.toggle('checked', annual.checked);
+}
+
+// ─── KEYPAD ────────────────────────────────────────────────
+function openKeypad() {
+  kpRawValue = document.getElementById('principalHidden').value || '';
+  renderKpDisplay();
+  document.getElementById('keypadOverlay').classList.add('open');
+  document.getElementById('amountBox').classList.add('active');
+}
+
+function closeKeypad() {
+  document.getElementById('keypadOverlay').classList.remove('open');
+  document.getElementById('amountBox').classList.remove('active');
+}
+
+function confirmKeypad() {
+  const num = parseFloat(kpRawValue) || 0;
+  if (num > 0) {
+    document.getElementById('principalHidden').value = num;
+    const display = document.getElementById('amountDisplay');
+    display.classList.remove('placeholder');
+    display.textContent = formatINR(num);
+  }
+  closeKeypad();
+}
+
+function handleOverlayClick(e) {
+  if (e.target === document.getElementById('keypadOverlay')) closeKeypad();
+}
+
+function kpPress(char) {
+  if (char === '.' && kpRawValue.includes('.')) return;
+  if (kpRawValue === '0' && char !== '.') kpRawValue = char;
+  else if (kpRawValue.length < 12) kpRawValue += char;
+  renderKpDisplay();
+}
+
+function kpBackspace() {
+  kpRawValue = kpRawValue.slice(0, -1);
+  if (kpRawValue === '') kpRawValue = '';
+  renderKpDisplay();
+}
+
+function renderKpDisplay() {
+  const val = kpRawValue || '0';
+  const parts = val.split('.');
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  const formatted = parts.join('.');
+  document.getElementById('kpDisplay').innerHTML = formatted + '<span class="kp-cursor"></span>';
+}
+
+// ─── VALIDATION ────────────────────────────────────────────
+function validateInputs() {
+  const principal = parseFloat(document.getElementById('principalHidden').value) || 0;
+  const rate = parseFloat(document.getElementById('rate').value) || 0;
+  const errors = [];
+
+  if (principal <= 0) errors.push('Please enter a principal amount using the keypad.');
+  if (rate <= 0) errors.push('Interest rate must be greater than 0.');
+
+  if (periodMode === 'date') {
+    const s = new Date(document.getElementById('startDate').value);
+    const e = new Date(document.getElementById('endDate').value);
+    if (!document.getElementById('startDate').value || !document.getElementById('endDate').value) {
+      errors.push('Please select both Start and End dates.');
+    } else if (e <= s) {
+      errors.push('End date must be after Start date.');
+    }
+  } else {
+    const m = parseInt(document.getElementById('customMonths').value) || 0;
+    if (m <= 0) errors.push('Please select or enter number of months.');
+  }
+
+  if (errors.length > 0) { showError(errors.join(' ')); return false; }
+  hideError();
+  return true;
+}
+
+// ─── CALCULATION ───────────────────────────────────────────
+function handleCalculation() {
+  if (!validateInputs()) return;
+  showSpinner(true);
+  setTimeout(async () => {
+    await performCalc();
+    showSpinner(false);
+  }, 600);
+}
+
+async function performCalc() {
+  const principal = parseFloat(document.getElementById('principalHidden').value);
+  let rate = parseFloat(document.getElementById('rate').value);
+  const rateType = document.querySelector('input[name="rateType"]:checked').value;
+  const frequency = parseInt(document.getElementById('frequency').value);
+
+  // Normalize rate to annual
+  if (rateType === 'monthly') rate = rate * 12;
+
+  let timeInYears, timeInDays, timeLabel;
+
+  if (periodMode === 'date') {
+    const s = new Date(document.getElementById('startDate').value);
+    const e = new Date(document.getElementById('endDate').value);
+    timeInDays = Math.round((e - s) / 86400000);
+    timeInYears = timeInDays / 365.25;
+    timeLabel = formatDuration(timeInDays);
+  } else {
+    const months = parseInt(document.getElementById('customMonths').value);
+    timeInYears = months / 12;
+    timeInDays = Math.round(months * 30.44);
+    timeLabel = `${months} month${months !== 1 ? 's' : ''}`;
+  }
+
+  let interest, total;
+  if (currentMode === 'SI') {
+    interest = (principal * rate * timeInYears) / 100;
+    total = principal + interest;
+  } else {
+    const r = rate / (100 * frequency);
+    const n = frequency * timeInYears;
+    total = principal * Math.pow(1 + r, n);
+    interest = total - principal;
+  }
+
+  interest = Math.round(interest * 100) / 100;
+  total = Math.round(total * 100) / 100;
+
+  lastCalc = {
+    id: Date.now() + Math.random(),
+    principal, rate: rateType === 'monthly' ? rate / 12 : rate,
+    rateType, frequency,
+    periodMode, timeInYears, timeInDays, timeLabel,
+    startDate: periodMode === 'date' ? document.getElementById('startDate').value : null,
+    endDate: periodMode === 'date' ? document.getElementById('endDate').value : null,
+    months: periodMode === 'month' ? parseInt(document.getElementById('customMonths').value) : null,
+    mode: currentMode, interest, total,
+    timestamp: new Date().toISOString()
+  };
+
+  // History
+  history.unshift(lastCalc);
+  if (history.length > 999) history.pop();
+  saveHistoryToStorage();
+  renderHistory();
+  displayResults();
+}
+
+function formatDuration(days) {
+  const y = Math.floor(days / 365);
+  const m = Math.floor((days % 365) / 30);
+  const d = days % 30;
+  let t = '';
+  if (y > 0) t += `${y}yr `;
+  if (m > 0) t += `${m}mo `;
+  if (d > 0) t += `${d}d`;
+  return t.trim();
+}
+
+// ─── DISPLAY RESULTS ───────────────────────────────────────
+function displayResults() {
+  const c = lastCalc;
+  document.getElementById('resPrincipal').textContent = '₹' + formatINR(c.principal);
+  document.getElementById('resInterest').textContent = '₹' + formatINR(c.interest);
+  document.getElementById('resTotal').textContent = '₹' + formatINR(c.total);
+
+  const rateDisplay = c.rateType === 'monthly' ? `${c.rate.toFixed(4)}% / month` : `${c.rate.toFixed(4)}% / year`;
+  const modeText = c.mode === 'SI' ? 'Simple Interest' : `Compound Interest (${getFreqText(c.frequency)})`;
+  const periodText = c.periodMode === 'date'
+    ? `${c.startDate} → ${c.endDate} (${c.timeLabel})`
+    : c.timeLabel;
+
+  document.getElementById('resMeta').innerHTML = `
+    <strong>Type:</strong> ${modeText} &nbsp;|&nbsp;
+    <strong>Rate:</strong> ${rateDisplay}<br>
+    <strong>Period:</strong> ${periodText}<br>
+    <strong>Days:</strong> ${c.timeInDays} &nbsp;|&nbsp;
+    <strong>Years:</strong> ${c.timeInYears.toFixed(4)}
+  `;
+
+  document.getElementById('resultsEmpty').style.display = 'none';
+  document.getElementById('resultBlocks').classList.add('show');
+  showSuccess(`${c.mode} calculation completed ✓`);
+}
+
+// ─── HISTORY ───────────────────────────────────────────────
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  if (history.length === 0) {
+    list.innerHTML = '<div class="history-empty">No calculations yet. Start by calculating interest!</div>';
+    return;
+  }
+
+  list.innerHTML = history.map(item => `
+    <div class="history-item" onclick="loadCalc(${item.id})">
+      <span class="hi-badge ${item.mode === 'SI' ? 'si-badge' : 'ci-badge'}">${item.mode}</span>
+      <div class="hi-details">
+        <strong>₹${formatINR(item.principal)}</strong> @ ${item.rate.toFixed(2)}% ${item.rateType} &nbsp;·&nbsp; ${item.timeLabel}<br>
+        Interest: ₹${formatINR(item.interest)} &nbsp;·&nbsp; ${new Date(item.timestamp).toLocaleDateString('en-IN')}
+      </div>
+      <div class="hi-total">₹${formatINR(item.total)}</div>
+    </div>
+  `).join('');
+}
+
+function loadCalc(id) {
+  const c = history.find(i => i.id == id);
+  if (!c) return;
+
+  // Load principal
+  document.getElementById('principalHidden').value = c.principal;
+  const disp = document.getElementById('amountDisplay');
+  disp.classList.remove('placeholder');
+  disp.textContent = formatINR(c.principal);
+
+  document.getElementById('rate').value = c.rate;
+
+  const radioEl = document.querySelector(`input[name="rateType"][value="${c.rateType}"]`);
+  if (radioEl) { radioEl.checked = true; handleRateType(radioEl); updatePillStyles(); }
+
+  switchMode(c.mode);
+
+  if (c.periodMode === 'date' && c.startDate && c.endDate) {
+    switchPeriodMode('date');
+    document.getElementById('startDate').value = c.startDate;
+    document.getElementById('endDate').value = c.endDate;
+    calculateDuration();
+  } else if (c.periodMode === 'month' && c.months) {
+    switchPeriodMode('month');
+    document.getElementById('customMonths').value = c.months;
+    selectedMonths = c.months;
+    updateDurationBadge();
+  }
+
+  if (c.mode === 'CI') document.getElementById('frequency').value = c.frequency;
+
+  lastCalc = c;
+  displayResults();
+  showSuccess('Loaded from history ✓');
+}
+
+function loadHistoryFromStorage() {
+  try {
+    history = JSON.parse(localStorage.getItem('calcProHistory') || '[]');
+    renderHistory();
+  } catch { history = []; }
+}
+
+function saveHistoryToStorage() {
+  try { localStorage.setItem('calcProHistory', JSON.stringify(history)); } catch {}
+}
+
+// ─── CLEAR ─────────────────────────────────────────────────
+function confirmClearAll() {
+  showModal('Clear All Fields', 'Are you sure you want to clear all inputs and results?', clearAll);
+}
+
+function confirmClearHistory() {
+  if (history.length === 0) { showError('No history to clear.'); return; }
+  showModal('Clear History', `Delete all ${history.length} calculation(s) from history?`, clearHistory);
+}
+
+function clearAll() {
+  document.getElementById('principalHidden').value = '';
+  const disp = document.getElementById('amountDisplay');
+  disp.classList.add('placeholder');
+  disp.textContent = 'Tap to enter amount';
+  document.getElementById('rate').value = '';
+  document.getElementById('startDate').value = '';
+  setDefaultDates();
+  document.getElementById('customMonths').value = '';
+  selectedMonths = 0;
+  document.querySelectorAll('.month-chip').forEach(c => c.classList.remove('selected'));
+  document.getElementById('durationBadge').classList.remove('shown');
+  document.getElementById('resultsEmpty').style.display = '';
+  document.getElementById('resultBlocks').classList.remove('show');
+  lastCalc = null;
+  kpRawValue = '';
+  hideError();
+  showSuccess('All fields cleared ✓');
+}
+
+function clearHistory() {
+  history = [];
+  saveHistoryToStorage();
+  renderHistory();
+  showSuccess('History cleared ✓');
+}
+
+// ─── PDF REPORT ────────────────────────────────────────────
+function downloadPDF() {
+  if (!lastCalc) { showError('Please calculate first.'); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const c = lastCalc;
+
+  // Header
+  doc.setFillColor(20, 22, 36);
+  doc.rect(0, 0, 210, 45, 'F');
+  doc.setFontSize(22);
+  doc.setTextColor(245, 166, 35);
+  doc.setFont(undefined, 'bold');
+  doc.text('INTEREST CALCULATION REPORT', 15, 22);
+  doc.setFontSize(10);
+  doc.setTextColor(168, 173, 200);
+  doc.setFont(undefined, 'normal');
+  doc.text(`Generated: ${new Date().toLocaleString('en-IN')}`, 15, 35);
+
+  let y = 58;
+
+  // Type badge
+  const typeTxt = c.mode === 'SI' ? 'SIMPLE INTEREST' : 'COMPOUND INTEREST';
+  doc.setFillColor(c.mode === 'SI' ? 74 : 245, c.mode === 'SI' ? 222 : 158, c.mode === 'SI' ? 128 : 11);
+  doc.roundedRect(15, y - 5, 70, 14, 3, 3, 'F');
+  doc.setFontSize(10);
+  doc.setFont(undefined, 'bold');
+  doc.setTextColor(0, 0, 0);
+  doc.text(typeTxt, 20, y + 4);
+
+  y += 22;
+
+  // Details section
+  doc.setFontSize(14);
+  doc.setTextColor(30, 30, 60);
+  doc.setFont(undefined, 'bold');
+  doc.text('Investment Details', 15, y);
+  y += 4;
+  doc.setDrawColor(200, 200, 220);
+  doc.line(15, y, 195, y);
+  y += 12;
+
+  const details = [
+    ['Principal Amount', `Rs. ${c.principal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`],
+    ['Interest Rate', `${c.rate.toFixed(4)}% (${c.rateType})`],
+    ['Period', c.timeLabel],
+    ['Total Days', `${c.timeInDays} days`],
+    ['Time (Years)', `${c.timeInYears.toFixed(4)}`],
+    ...(c.mode === 'CI' ? [['Compounding', getFreqText(c.frequency)]] : []),
+    ...(c.startDate ? [['Start Date', c.startDate], ['End Date', c.endDate]] : []),
+  ];
+
+  doc.setFont(undefined, 'normal');
+  doc.setFontSize(11);
+  details.forEach(([label, val]) => {
+    doc.setTextColor(100, 100, 130);
+    doc.text(label + ':', 15, y);
+    doc.setTextColor(20, 20, 40);
+    doc.setFont(undefined, 'bold');
+    doc.text(val, 80, y);
+    doc.setFont(undefined, 'normal');
+    y += 10;
+  });
+
+  y += 10;
+
+  // Results
+  doc.setFontSize(14);
+  doc.setTextColor(30, 30, 60);
+  doc.setFont(undefined, 'bold');
+  doc.text('Calculation Results', 15, y);
+  y += 4;
+  doc.setDrawColor(200, 200, 220);
+  doc.line(15, y, 195, y);
+  y += 14;
+
+  const blocks = [
+    { label: 'Principal Amount', value: `Rs. ${c.principal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`, bg: [230, 248, 240], lc: [21, 128, 61] },
+    { label: 'Interest Earned', value: `Rs. ${c.interest.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`, bg: [255, 243, 220], lc: [180, 100, 0] },
+    { label: 'Total Amount', value: `Rs. ${c.total.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`, bg: [220, 230, 255], lc: [30, 64, 175] },
+  ];
+
+  blocks.forEach(b => {
+    doc.setFillColor(...b.bg);
+    doc.roundedRect(15, y - 4, 180, 28, 4, 4, 'F');
+    doc.setDrawColor(...b.lc);
+    doc.setLineWidth(1.2);
+    doc.roundedRect(15, y - 4, 180, 28, 4, 4, 'S');
+    doc.setLineWidth(0.2);
+    doc.setFontSize(10);
+    doc.setTextColor(...b.lc);
+    doc.setFont(undefined, 'bold');
+    doc.text(b.label, 20, y + 5);
+    doc.setFontSize(16);
+    doc.text(b.value, 20, y + 18);
+    y += 36;
+  });
+
+  // Footer
+  y += 8;
+  doc.setFillColor(248, 248, 252);
+  doc.rect(0, y - 4, 210, 22, 'F');
+  doc.setFontSize(9);
+  doc.setTextColor(120, 120, 140);
+  doc.setFont(undefined, 'normal');
+  doc.text('Generated by Interest Calculator Pro  |  For financial planning purposes only.', 15, y + 6);
+  doc.text(`Report ID: ${Date.now()}`, 15, y + 13);
+
+  doc.save(`Interest-Report-${new Date().toISOString().split('T')[0]}.pdf`);
+  showSuccess('PDF report downloaded ✓');
+}
+
+// ─── MODAL ────────────────────────────────────────────────
+function showModal(title, msg, cb) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalMsg').textContent = msg;
+  modalCallback = cb;
+  document.getElementById('modalOverlay').classList.add('open');
+  document.getElementById('modalConfirmBtn').onclick = () => { closeModal(); if (modalCallback) modalCallback(); };
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+}
+
+// ─── MESSAGES ─────────────────────────────────────────────
+function showError(msg) {
+  const el = document.getElementById('errorMsg');
+  el.textContent = '⚠️ ' + msg;
+  el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 6000);
+}
+
+function hideError() { document.getElementById('errorMsg').style.display = 'none'; }
+
+function showSuccess(msg) {
+  const el = document.getElementById('successMsg');
+  el.textContent = '✅ ' + msg;
+  el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 3000);
+}
+
+function showSpinner(show) {
+  document.getElementById('spinner').style.display = show ? 'block' : 'none';
+  document.getElementById('calcBtn').disabled = show;
+}
+
+// ─── HELPERS ──────────────────────────────────────────────
+function formatINR(num) {
+  return new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(num);
+}
+
+function getFreqText(f) {
+  return { 1: 'Annually', 2: 'Semi-Annually', 4: 'Quarterly', 12: 'Monthly', 365: 'Daily' }[f] || 'Custom';
+}
+</script>
+</body>
+</html>
